@@ -1,4 +1,4 @@
-# kustomize-base-action
+# copy-commit-action
 Copy files from source path to taget path, then commit changes in local branch.
 * Just git commmit when source path defined.
 
