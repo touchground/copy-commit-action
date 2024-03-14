@@ -3,13 +3,13 @@ description: Move the kube manifests to kustomize base folder of deployment repo
 author: touchground
 
 inputs:
-  repo:
-    description: Repository
-    required: true
-  branch:
-    description: The upstream branch that is rebased on
-    required: false
-    default:  main
+  # repo:
+  #   description: Repository
+  #   required: true
+  # branch:
+  #   description: The upstream branch that is rebased on
+  #   required: false
+  #   default:  main
   source-path:
     description: Source path of file location
     required: true
