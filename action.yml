@@ -3,20 +3,13 @@ description: Move the kube manifests to kustomize base folder of deployment repo
 author: touchground
 
 inputs:
-  # repo:
-  #   description: Repository
-  #   required: true
-  # branch:
-  #   description: The upstream branch that is rebased on
-  #   required: false
-  #   default:  main
-  source-path:
-    description: Source path of file location
-    required: true
+  source:
+    description: Source path location
+    required: false
     default:  ""
-  base-path:
-    description: Target path of file location
-    required: true
+  target:
+    description: Target path location
+    required: false
     default:  ""
   message:
     description: Commit message
@@ -26,24 +19,29 @@ inputs:
 outputs:
   output:
     description: True = changes to manifest files (commit to local branch), False = No change.
-    value: ${{ steps.prep_base.outputs.output }}
+    value: ${{ steps.cp_commit.outputs.output }}
 
 
 runs:
   using: composite
   steps:
-    - name: prepare for kubustomize base
-      id: prep_base
+    - name: copy & commit
+      id: cp_commit
       run: |
         set -e;
-        SOURCE=${{ inputs.source-path }}
-        TARGET=${{ inputs.base-path }}
+        SOURCE=${{ inputs.source }}
+        TARGET=${{ inputs.base }}
         mkdir -p $TARGET
 
-        if [ $(echo $SOURCE | egrep '.yaml$') ]; then
+        if [ "$SOURCE" = "" ]; then
+          # Just git commit 
+        elif [ $(echo $SOURCE | egrep '.yaml$') ]; then
           cp -f $SOURCE $TARGET
-        else
+        elif [ -n "$SOURCE" ] && [ -d "$SOURCE" ]; then
           cp -f $SOURCE/*.yaml $TARGET
+        else
+          echo "Source does not exist: $SOURCE"
+          exit 1;
         fi
 
         git config --local user.email "$(git show -s --format='%ae' HEAD)";
@@ -55,7 +53,7 @@ runs:
           git commit -m "${{ inputs.message }}"
           echo "output=true" >> $GITHUB_OUTPUT
         else
-          echo "No changes to commit"
+          echo "No changes to commit."
           echo "output=false" >> $GITHUB_OUTPUT
         fi
       shell: bash
