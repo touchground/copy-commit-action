@@ -1,0 +1,61 @@
+name: Prepare Kustomize Base
+description: Move the kube manifests to kustomize base folder of deployment repo, then commit if changed.
+author: touchground
+
+inputs:
+  repo:
+    description: Repository
+    required: true
+  branch:
+    description: The upstream branch that is rebased on
+    required: false
+    default:  main
+  source-path:
+    description: Source path of file location
+    required: true
+    default:  ""
+  base-path:
+    description: Target path of file location
+    required: true
+    default:  ""
+  message:
+    description: Commit message
+    required: false
+    defautl: "auto commit"
+
+outputs:
+  change:
+    description: True = changes to manifest files (commit to local branch), False = No change.
+    value: ${{ steps.prep_base.outputs.output }}
+
+
+runs:
+  using: composite
+  steps:
+    - name: prepare for kubustomize base
+      id: prep_base
+      run: |
+        set -e;
+        SOURCE={{ inputs.source-path }}
+        TARGET={{ inputs.base-path }}
+        mkdir -p $TARGET
+
+        if [ $(echo $SOURCE | egrep '.yaml$') ]; then
+          cp -f $SOURCE $TARGET
+        else
+          cp -f $SOURCE/*.yaml $TARGET
+        fi
+
+        git config --local user.email "$(git show -s --format='%ae' HEAD)";
+        git config --local user.name  "$(git show -s --format='%an' HEAD)";
+
+        git add .
+
+        if [ ! "$(git status | grep 'nothing to commit')" ]; then
+          git commit -m "Update kustomize base for ${{ inputs.app-name }}"
+          echo "output=true" >> $GITHUB_OUTPUT
+        else
+          echo "No changes to commit"
+          echo "output=false" >> $GITHUB_OUTPUT
+        fi
+      shell: bash
