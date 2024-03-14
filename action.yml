@@ -52,7 +52,7 @@ runs:
         git add .
 
         if [ ! "$(git status | grep 'nothing to commit')" ]; then
-          git commit -m "Update kustomize base for ${{ inputs.app-name }}"
+          git commit -m "Update kustomize base by GitHub Action [bot]"
           echo "output=true" >> $GITHUB_OUTPUT
         else
           echo "No changes to commit"
