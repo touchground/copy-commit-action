@@ -1,4 +1,4 @@
-name: Prepare Kustomize Base
+name: Copy files then commit change
 description: Move the kube manifests to kustomize base folder of deployment repo, then commit if changed.
 author: touchground
 
@@ -21,7 +21,7 @@ inputs:
   message:
     description: Commit message
     required: false
-    defautl: "auto commit"
+    defautl: "auto commit by GitHub Action [bot]"
 
 outputs:
   output:
@@ -52,7 +52,7 @@ runs:
         git add .
 
         if [ ! "$(git status | grep 'nothing to commit')" ]; then
-          git commit -m "Update kustomize base by GitHub Action [bot]"
+          git commit -m "${{ inputs.message }}"
           echo "output=true" >> $GITHUB_OUTPUT
         else
           echo "No changes to commit"
