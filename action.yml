@@ -35,7 +35,7 @@ runs:
     - name: prepare for kubustomize base
       id: prep_base
       run: |
-        set -ex;
+        set -e;
         SOURCE=${{ inputs.source-path }}
         TARGET=${{ inputs.base-path }}
         mkdir -p $TARGET
