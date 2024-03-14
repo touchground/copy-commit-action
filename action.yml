@@ -34,7 +34,7 @@ runs:
         mkdir -p $TARGET
 
         if [ "$SOURCE" = "" ]; then
-          # Just git commit 
+          echo "Just git commit"
         elif [ $(echo $SOURCE | egrep '.yaml$') ]; then
           cp -f $SOURCE $TARGET
         elif [ -n "$SOURCE" ] && [ -d "$SOURCE" ]; then
