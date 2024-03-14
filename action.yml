@@ -53,9 +53,9 @@ runs:
 
         if [ ! "$(git status | grep 'nothing to commit')" ]; then
           git commit -m "Update kustomize base by GitHub Action [bot]"
-          echo "output=true" >> $GITHUB_OUTPUT
+          echo "output='true'" >> $GITHUB_OUTPUT
         else
           echo "No changes to commit"
-          echo "output=false" >> $GITHUB_OUTPUT
+          echo "output='false'" >> $GITHUB_OUTPUT
         fi
       shell: bash
