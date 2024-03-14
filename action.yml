@@ -36,8 +36,8 @@ runs:
       id: prep_base
       run: |
         set -ex;
-        SOURCE={{ inputs.source-path }}
-        TARGET={{ inputs.base-path }}
+        SOURCE=${{ inputs.source-path }}
+        TARGET=${{ inputs.base-path }}
         mkdir -p $TARGET
 
         if [ $(echo $SOURCE | egrep '.yaml$') ]; then
