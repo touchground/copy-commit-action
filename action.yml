@@ -24,7 +24,7 @@ inputs:
     defautl: "auto commit"
 
 outputs:
-  change:
+  output:
     description: True = changes to manifest files (commit to local branch), False = No change.
     value: ${{ steps.prep_base.outputs.output }}
 
@@ -53,11 +53,9 @@ runs:
 
         if [ ! "$(git status | grep 'nothing to commit')" ]; then
           git commit -m "Update kustomize base by GitHub Action [bot]"
-          # echo "output=true" >> $GITHUB_OUTPUT
-          echo "::set-output name=output::true"
+          echo "output=true" >> $GITHUB_OUTPUT
         else
           echo "No changes to commit"
-          # echo "output=false" >> $GITHUB_OUTPUT
-          echo "::set-output name=output::false"
+          echo "output=false" >> $GITHUB_OUTPUT
         fi
       shell: bash
