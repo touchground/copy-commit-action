@@ -30,7 +30,7 @@ runs:
       run: |
         set -e;
         SOURCE=${{ inputs.source }}
-        TARGET=${{ inputs.base }}
+        TARGET=${{ inputs.target }}
         mkdir -p $TARGET
 
         if [ "$SOURCE" = "" ]; then
