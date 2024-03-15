@@ -31,7 +31,10 @@ runs:
         set -e;
         SOURCE=${{ inputs.source }}
         TARGET=${{ inputs.target }}
-        mkdir -p $TARGET
+        
+        if [ ! "$TARGET" = "" ]; then
+          mkdir -p $TARGET
+        fi
 
         if [ "$SOURCE" = "" ]; then
           echo "Just git commit"
