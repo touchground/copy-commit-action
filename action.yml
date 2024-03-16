@@ -31,7 +31,7 @@ runs:
         set -e;
         SOURCE=${{ inputs.source }}
         TARGET=${{ inputs.target }}
-        
+
         if [ ! "$TARGET" = "" ]; then
           mkdir -p $TARGET
         fi
@@ -50,9 +50,10 @@ runs:
         git config --local user.email "$(git show -s --format='%ae' HEAD)";
         git config --local user.name  "$(git show -s --format='%an' HEAD)";
 
-        git add .
+        
 
-        if [ ! "$(git status | grep 'nothing to commit')" ]; then
+        if [ -n "$(git status --porcelain)" ]; then
+          git add .
           git commit -m "${{ inputs.message }}"
           echo "output=true" >> $GITHUB_OUTPUT
         else
