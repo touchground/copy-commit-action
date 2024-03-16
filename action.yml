@@ -17,9 +17,9 @@ inputs:
     defautl: "auto commit by GitHub Action [bot]"
 
 outputs:
-  output:
+  changed:
     description: True = changes to manifest files (commit to local branch), False = No change.
-    value: ${{ steps.cp_commit.outputs.output }}
+    value: ${{ steps.cp_commit.outputs.changed }}
 
 
 runs:
