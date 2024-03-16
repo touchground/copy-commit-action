@@ -55,9 +55,9 @@ runs:
         if [ -n "$(git status --porcelain)" ]; then
           git add .
           git commit -m "${{ inputs.message }}"
-          echo "output=true" >> $GITHUB_OUTPUT
+          echo "changed=true" >> $GITHUB_OUTPUT
         else
           echo "No changes to commit."
-          echo "output=false" >> $GITHUB_OUTPUT
+          echo "changed=false" >> $GITHUB_OUTPUT
         fi
       shell: bash
