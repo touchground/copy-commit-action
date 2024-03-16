@@ -50,10 +50,9 @@ runs:
         git config --local user.email "$(git show -s --format='%ae' HEAD)";
         git config --local user.name  "$(git show -s --format='%an' HEAD)";
 
+        git add .
         
-
         if [ -n "$(git status --porcelain)" ]; then
-          git add .
           git commit -m "${{ inputs.message }}"
           echo "changed=true" >> $GITHUB_OUTPUT
         else
