@@ -59,7 +59,7 @@ runs:
           echo "commitHash=$commitHash" >> $GITHUB_OUTPUT
           echo "changed=true" >> $GITHUB_OUTPUT
         else
-          echo "No changes to commit."
+          echo "::warning::No changes to commit."
           echo "changed=false" >> $GITHUB_OUTPUT
         fi
       shell: bash
