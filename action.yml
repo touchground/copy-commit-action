@@ -17,6 +17,8 @@ inputs:
     defautl: "auto commit by GitHub Action [bot]"
 
 outputs:
+  commitHash:
+    value: ${{ steps.cp_commit.outputs.commitHash }}
   changed:
     description: True = changes to manifest files (commit to local branch), False = No change.
     value: ${{ steps.cp_commit.outputs.changed }}
@@ -53,6 +55,8 @@ runs:
         if [ -n "$(git status --porcelain)" ]; then
           git add .
           git commit -m "${{ inputs.message }}"
+          commitHash=$(git rev-parse HEAD | cut -c 1-7)
+          echo "commitHash=$commitHash" >> $GITHUB_OUTPUT
           echo "changed=true" >> $GITHUB_OUTPUT
         else
           echo "No changes to commit."
