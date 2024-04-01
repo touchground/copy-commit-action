@@ -1,78 +1,79 @@
-name: Copy files then commit change
-description: Move the kube manifests to kustomize base folder of deployment repo, then commit if changed.
-author: touchground
+name: 'Push with Fast-Forward Pull, Merge and Rebase Fallback'
+description: 'Pushes to a remote repository, and if there is a failure, tries pull with fast-forward first before pull with merge and then rebase'
 
 inputs:
-  source:
-    description: Source path location
+  token:
     required: false
-    default:  ""
-  target:
-    description: Target path location
-    required: false
-    default:  ""
-  message:
-    description: Commit message
-    required: false
-    defautl: "auto commit by GitHub Action [bot]"
-
+    default: ${{ github.token }}
 outputs:
   commitHash:
-    value: ${{ steps.cp_commit.outputs.commitHash }}
-  commitFullHash:
-    value: ${{ steps.cp_commit.outputs.commitFullHash }}
-  commitHashURL:
-    value: ${{ steps.cp_commit.outputs.commitHashURL }}
-  changed:
-    description: True = changes to manifest files (commit to local branch), False = No change.
-    value: ${{ steps.cp_commit.outputs.changed }}
-
+    description: 'The commit hash of the pushed commit'
+    value: ${{ steps.hash.outputs.commitHash }}
 
 runs:
-  using: composite
+  using: "composite"
   steps:
-    - name: copy & commit
-      id: cp_commit
+    - name: Configure Git
       run: |
-        set -e;
-        SOURCE=${{ inputs.source }}
-        TARGET=${{ inputs.target }}
-
-        if [ ! "$TARGET" = "" ]; then
-          mkdir -p $TARGET
-        fi
-
-        if [ "$SOURCE" = "" ]; then
-          echo "Just git commit"
-        elif [ $(echo $SOURCE | egrep '.yaml$') ]; then
-          cp -f $SOURCE $TARGET
-        elif [ -n "$SOURCE" ] && [ -d "$SOURCE" ]; then
-          cp -f $SOURCE/*.yaml $TARGET
-        else
-          echo "Source does not exist: $SOURCE"
-          exit 1;
-        fi
-
         git config --local user.email "$(git show -s --format='%ae' HEAD)";
         git config --local user.name  "$(git show -s --format='%an' HEAD)";
+      shell: bash
 
-        if [ -n "$(git status --porcelain)" ]; then
-          git add .
-          git commit -m "${{ inputs.message }}"
-          commitHash=$(git rev-parse HEAD | cut -c 1-7)
-          commitfullHash=$(git rev-parse HEAD)
-          commithashURL=$(git remote get-url origin | sed 's/\.git//g')
-          if [[ $commithashURL != https* ]]; then
-            commithashURL="https://github.com/$commithashURL"
+    - name: Push with Rebase Retry
+      run: |
+        set -e;
+        for i in {1..5}; do
+          # Check if GitHub rate limit is approaching
+          rate_limit=$(curl -s -H "Authorization: token ${{ inputs.token }}" https://api.github.com/rate_limit | jq '.resources.core.remaining')
+          echo "GitHub rate limit remaining: $rate_limit"
+          if [ "$rate_limit" -lt 15 ]; then
+            echo "Approaching GitHub rate limit. Sleeping for 1 minute..."
+            sleep 60
           fi
-          commithashURL="$commithashURL/commit/$commitfullHash"
+         
+          git push origin $(git branch --show-current) && break || (
+            # echo "==> Try pull fast-forward..." && 
+            # git pull --ff-only origin $(git branch --show-current) && 
+            # git push origin $(git branch --show-current) && break || 
+            # echo "==> Try pull merge..." && 
+            # git pull --no-rebase origin $(git branch --show-current) && 
+            # git push origin $(git branch --show-current) && break || 
+            # echo "git merge --abort" &&
+            # git merge --abort &&
+            # echo "==> Try pull rebase..." && 
+            # git pull --rebase origin $(git branch --show-current) && 
+            # git push origin $(git branch --show-current) && break ||  
+            # echo "git rebase --skip" &&
+            # git rebase --skip &&
+            echo "==> unstash before rebasing..." &&
+            echo "git status" &&
+            git status &&
+            # git pull --rebase --abort &&
+            echo "" && echo "## git reset" &&
+            git reset --hard HEAD loadtest.txt &&
+            # git commit -m "Rebase to adjust same file conflict" &&
+            echo "" && echo "## git pull --rebase origin $(git branch --show-current)" &&
+            git pull --rebase origin $(git branch --show-current) && 
+            # git push origin $(git branch --show-current) && break ||
+            echo "## Readd" &&
+            git add loadtest.txt && git rebase --continue &&
+            git commit -m "Rebase to adjust same file conflict" &&
+            echo "## git push" &&
+            git push origin $(git branch --show-current) && break
+          ) || 
+          echo "##### loop ($i)... #####" && echo ""
+          if [ $i -eq 5 ]; then
+            echo "::error::Failed to push changes to remote"
+            exit 1
+          fi
+          sleep 0.2
+        done
+      shell: bash
 
-          echo "commitHash=$commitHash" >> $GITHUB_OUTPUT
-          echo "commitHashURL=$commithashURL" >> $GITHUB_OUTPUT
-          echo "commitFullHash=$commitfullHash" >> $GITHUB_OUTPUT
-          echo "changed=true" >> $GITHUB_OUTPUT
-        else
-          echo "::warning::No changes to commit."
-          echo "changed=false" >> $GITHUB_OUTPUT
-        fi
+    - name: Output Hash
+      id: hash
+      run: |
+        commitHash=$(git rev-parse HEAD | cut -c 1-7)
+        echo "CommitHash: $commitHash"
+        echo "commitHash=$commitHash" >> $GITHUB_OUTPUT
       shell: bash
